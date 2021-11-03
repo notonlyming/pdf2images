@@ -43,11 +43,9 @@ def images_merge(images, images_number_in_one=2):
     for page_index in range(pages_number):
         print(f'第{page_index+1}页合并图像，共{pages_number}页...')
         # 新建空画布
-        pages_images.append(Image.new('RGB', 
-        (
-            single_image_size[0]*images_number_in_one + ONE_CM_PIXEL*3, 
-            single_image_size[1] + ONE_CM_PIXEL*2), color='White'
-        )
+        pages_images.append(Image.new('RGB', (
+            single_image_size[0] * images_number_in_one + ONE_CM_PIXEL*(images_number_in_one + 1), 
+            single_image_size[1] + ONE_CM_PIXEL*2), color='White')
         )
         for little_page_index in range(images_number_in_one):
             # 检测最后一页，如果超范围就跳出
@@ -76,11 +74,17 @@ def images_merge(images, images_number_in_one=2):
         #pages_images[page_index].show()
     return pages_images
 
-path = sys.argv[1]
-pdf_png_pages = pdf_image(path, path)
-pages = images_merge(pdf_png_pages, 2)
-print('写出文件：')
-for page_index in range(len(pages)):
-    print(f'{path}{page_index+1}.png')
-    pages[page_index].save(f'{path}{page_index+1}.png')
-input('已完成！')
+if __name__ == '__main__':
+    path = sys.argv[1]
+    if len(sys.argv) > 2:
+        one_page_images_number = int(sys.argv[2])
+    else:
+        one_page_images_number = 2
+
+    pdf_png_pages = pdf_image(path, path)
+    pages = images_merge(pdf_png_pages, one_page_images_number)
+    print('写出文件：')
+    for page_index in range(len(pages)):
+        print(f'{path}{page_index+1}.png')
+        pages[page_index].save(f'{path}{page_index+1}.png')
+    input('已完成！')
