@@ -33,10 +33,8 @@ def pdf_image(pdfPath, imgPath, zoom_x=5, zoom_y=5, rotation_angle=0):
 images bytes类型的图像列表
 page_number 一页上放几个图像
 '''
-def images_merge(images, images_number_in_one=2):
+def images_merge(images, images_number_in_one=2, blank_edge_pixels=60, LINE_PIXEL=3):
     import io
-    ONE_CM_PIXEL = 60 # 72像素每英寸下一厘米的近似像素值
-    LINE_PIXEL = 3 # 细线边框的厚度
     pages_number = math.ceil(len(images) / images_number_in_one) # 合并后的总页数
     pages_images = list() # 所有合并后的页面
     single_image_size = Image.open(io.BytesIO(images[0])).size # 临时打开第一个图像获取尺寸
@@ -44,8 +42,8 @@ def images_merge(images, images_number_in_one=2):
         print(f'第{page_index+1}页合并图像，共{pages_number}页...')
         # 新建空画布
         pages_images.append(Image.new('RGB', (
-            single_image_size[0] * images_number_in_one + ONE_CM_PIXEL*(images_number_in_one + 1), 
-            single_image_size[1] + ONE_CM_PIXEL*2), color='White')
+            single_image_size[0] * images_number_in_one + blank_edge_pixels*(images_number_in_one + 1), 
+            single_image_size[1] + blank_edge_pixels*2), color='White')
         )
         for little_page_index in range(images_number_in_one):
             # 检测最后一页，如果超范围就跳出
@@ -66,23 +64,33 @@ def images_merge(images, images_number_in_one=2):
                 )
             # 图像放到空画布中
             pages_images[page_index].paste(im, (
-                ONE_CM_PIXEL*(little_page_index+1) + single_image_size[0]*little_page_index, 
-                ONE_CM_PIXEL, 
-                ONE_CM_PIXEL*(little_page_index+1) + single_image_size[0]*(little_page_index+1), 
-                ONE_CM_PIXEL+single_image_size[1]
+                blank_edge_pixels*(little_page_index+1) + single_image_size[0]*little_page_index, 
+                blank_edge_pixels, 
+                blank_edge_pixels*(little_page_index+1) + single_image_size[0]*(little_page_index+1), 
+                blank_edge_pixels+single_image_size[1]
                 ))
         #pages_images[page_index].show()
     return pages_images
 
 if __name__ == '__main__':
-    path = sys.argv[1]
-    if len(sys.argv) > 2:
-        one_page_images_number = int(sys.argv[2])
+    import easygui
+    if len(sys.argv) == 2:
+        path = sys.argv[1]
     else:
-        one_page_images_number = 2
+        easygui.msgbox(msg='需要通过拖动传入PDF文件！', title='无法继续', ok_button='好嘞')
+
+    result = easygui.multenterbox(
+        msg='填写以下转换参数(均为整数)。', 
+        title='需要参数', 
+        fields=['一张图放几页', '边缘留白像素', '外加边框像素（0为无边框）'],
+        values=[2, 60, 3]
+        )
+    one_page_images_number = int(result[0])
+    blank_edge_pixels = int(result[1])
+    line_pixel = int(result[2])
 
     pdf_png_pages = pdf_image(path, path)
-    pages = images_merge(pdf_png_pages, one_page_images_number)
+    pages = images_merge(pdf_png_pages, one_page_images_number, blank_edge_pixels, line_pixel)
     print('写出文件：')
     for page_index in range(len(pages)):
         print(f'{path}{page_index+1}.png')
