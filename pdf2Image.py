@@ -39,6 +39,7 @@ def images_merge(images, images_number_in_one=2, blank_edge_pixels=60, LINE_PIXE
     pages_images = list() # 所有合并后的页面
     single_image_size = Image.open(io.BytesIO(images[0])).size # 临时打开第一个图像获取尺寸
     for page_index in range(pages_number):
+        single_image_size = Image.open(io.BytesIO(images[page_index])).size # 重新获取图片尺寸，这在不同尺寸pdf且非合并的情况下适用
         print(f'第{page_index+1}页合并图像，共{pages_number}页...')
         # 新建空画布
         pages_images.append(Image.new('RGB', (
@@ -73,26 +74,29 @@ def images_merge(images, images_number_in_one=2, blank_edge_pixels=60, LINE_PIXE
     return pages_images
 
 if __name__ == '__main__':
-    import easygui
-    if len(sys.argv) == 2:
-        path = sys.argv[1]
-    else:
-        easygui.msgbox(msg='需要通过拖动传入PDF文件！', title='无法继续', ok_button='好嘞')
+    try:
+        import easygui
+        if len(sys.argv) == 2:
+            path = sys.argv[1]
+        else:
+            easygui.msgbox(msg='需要通过拖动传入PDF文件！', title='无法继续', ok_button='好嘞')
 
-    result = easygui.multenterbox(
-        msg='填写以下转换参数(均为整数)。', 
-        title='需要参数', 
-        fields=['一张图放几页', '边缘留白像素', '外加边框像素（0为无边框）'],
-        values=[2, 60, 3]
-        )
-    one_page_images_number = int(result[0])
-    blank_edge_pixels = int(result[1])
-    line_pixel = int(result[2])
+        result = easygui.multenterbox(
+            msg='填写以下转换参数(均为整数)。', 
+            title='需要参数', 
+            fields=['一张图放几页', '边缘留白像素', '外加边框像素（0为无边框）'],
+            values=[2, 60, 3]
+            )
+        one_page_images_number = int(result[0])
+        blank_edge_pixels = int(result[1])
+        line_pixel = int(result[2])
 
-    pdf_png_pages = pdf_image(path, path)
-    pages = images_merge(pdf_png_pages, one_page_images_number, blank_edge_pixels, line_pixel)
-    print('写出文件：')
-    for page_index in range(len(pages)):
-        print(f'{path}{page_index+1}.png')
-        pages[page_index].save(f'{path}{page_index+1}.png')
-    input('已完成！')
+        pdf_png_pages = pdf_image(path, path)
+        pages = images_merge(pdf_png_pages, one_page_images_number, blank_edge_pixels, line_pixel)
+        print('写出文件：')
+        for page_index in range(len(pages)):
+            print(f'{path}{page_index+1}.png')
+            pages[page_index].save(f'{path}{page_index+1}.png')
+        input('已完成！')
+    except Exception as e:
+        input(f"程序出了些错误！{e}")
