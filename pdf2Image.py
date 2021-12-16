@@ -37,9 +37,8 @@ def images_merge(images, images_number_in_one=2, blank_edge_pixels=60, LINE_PIXE
     import io
     pages_number = math.ceil(len(images) / images_number_in_one) # 合并后的总页数
     pages_images = list() # 所有合并后的页面
-    single_image_size = Image.open(io.BytesIO(images[0])).size # 临时打开第一个图像获取尺寸
     for page_index in range(pages_number):
-        single_image_size = Image.open(io.BytesIO(images[page_index])).size # 重新获取图片尺寸，这在不同尺寸pdf且非合并的情况下适用
+        single_image_size = Image.open(io.BytesIO(images[page_index])).size # 获取图片尺寸
         print(f'第{page_index+1}页合并图像，共{pages_number}页...')
         # 新建空画布
         pages_images.append(Image.new('RGB', (
@@ -54,15 +53,16 @@ def images_merge(images, images_number_in_one=2, blank_edge_pixels=60, LINE_PIXE
             # 打开图像
             im = Image.open(io.BytesIO(images[page_index * images_number_in_one + little_page_index]))
             # 在图像四周绘制边框
-            ImageDraw.Draw(im).line(
-                [
-                    (0+LINE_PIXEL, 0+LINE_PIXEL), (single_image_size[0]-LINE_PIXEL, 0+LINE_PIXEL),
-                    (0+LINE_PIXEL, 0+LINE_PIXEL), (0+LINE_PIXEL, single_image_size[1]-LINE_PIXEL),
-                    (0+LINE_PIXEL, single_image_size[1]-LINE_PIXEL), (single_image_size[0]-LINE_PIXEL, single_image_size[1]-LINE_PIXEL),
-                    (single_image_size[0]-LINE_PIXEL, single_image_size[1]-LINE_PIXEL), (single_image_size[0]-LINE_PIXEL, 0+LINE_PIXEL)
-                ],
-                fill='Black', width=LINE_PIXEL
-                )
+            if LINE_PIXEL:
+                ImageDraw.Draw(im).line(
+                    [
+                        (0+LINE_PIXEL, 0+LINE_PIXEL), (single_image_size[0]-LINE_PIXEL, 0+LINE_PIXEL),
+                        (0+LINE_PIXEL, 0+LINE_PIXEL), (0+LINE_PIXEL, single_image_size[1]-LINE_PIXEL),
+                        (0+LINE_PIXEL, single_image_size[1]-LINE_PIXEL), (single_image_size[0]-LINE_PIXEL, single_image_size[1]-LINE_PIXEL),
+                        (single_image_size[0]-LINE_PIXEL, single_image_size[1]-LINE_PIXEL), (single_image_size[0]-LINE_PIXEL, 0+LINE_PIXEL)
+                    ],
+                    fill='Black', width=LINE_PIXEL
+                    )
             # 图像放到空画布中
             pages_images[page_index].paste(im, (
                 blank_edge_pixels*(little_page_index+1) + single_image_size[0]*little_page_index, 
@@ -80,6 +80,7 @@ if __name__ == '__main__':
             path = sys.argv[1]
         else:
             easygui.msgbox(msg='需要通过拖动传入PDF文件！', title='无法继续', ok_button='好嘞')
+            exit()
 
         result = easygui.multenterbox(
             msg='填写以下转换参数(均为整数)。', 
