@@ -3,3 +3,4 @@ Autosave/
 build/
 dist/
 *.spec
+.*
